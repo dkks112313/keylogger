@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -13,7 +12,6 @@ func writeToFile(st string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer f.Close()
 
 	_, err = f.WriteString(st)
@@ -30,8 +28,6 @@ func still(w http.ResponseWriter, r *http.Request) {
 	}
 	st := string(save[:n])
 	log.Print(st)
-
-	fmt.Fprintf(w, "Hello, %s!", st)
 
 	if st == "favicon.ico" {
 		return
