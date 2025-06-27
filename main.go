@@ -5,37 +5,42 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
-func writeToFile(st string) {
-	f, err := os.OpenFile("file.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
+var file, _ = os.OpenFile("file.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
-	_, err = f.WriteString(st)
+func writeToFile(st string) {
+	_, err := file.WriteString(st)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func still(w http.ResponseWriter, r *http.Request) {
-	save := make([]byte, 1024)
-	n, err := r.Body.Read(save)
-	if err != io.EOF && err != nil {
+	save, err := io.ReadAll(r.Body)
+	if err != nil {
 		log.Fatal(err)
 	}
-	st := string(save[:n])
-	log.Print(st)
+	st := string(save)
 
-	if st == "favicon.ico" {
+	splitArray := strings.Split(st, ":")
+	if len(splitArray) != 2 {
+		log.Fatal("Invalid data")
+	}
+
+	log.Print(splitArray[0] + ": " + splitArray[1])
+
+	if splitArray[1] == "favicon.ico" {
 		return
 	}
-	writeToFile(st)
+
+	writeToFile(splitArray[1])
 }
 
 func main() {
+	defer file.Close()
+
 	http.HandleFunc("/", still)
 	http.ListenAndServe(":25583", nil)
 }

